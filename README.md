@@ -1,4 +1,8 @@
+<!-- badges: start -->
 [![Build Status](https://travis-ci.org/stevenpawley/Rsagacmd.svg?branch=master)](https://travis-ci.org/stevenpawley/Rsagacmd)
+
+[![CRAN status](https://www.r-pkg.org/badges/version/Rsagacmd)](https://cran.r-project.org/package=Rsagacmd)
+<!-- badges: end -->
 
 Rsagacmd
 ========
@@ -72,12 +76,26 @@ The newer SAGA-GIS compressed .sg-grd-z file format is not currently supported, 
 
 ## Package installation
 
-#### First install the devtools package:
+#### CRAN version
+
+```Rsagacmd``` is now available on CRAN. To install this version run :
+
+```
+install.packages("Rsagacmd")
+```
+
+In your R session.
+
+#### Development version
+
+First install the ```devtools``` package:
+
 ```
 install.packages("devtools")
 ```
 
-#### Next install Rsagacmd:
+Then install Rsagacmd from github:
+
 ```
 library(devtools)
 install_github("stevenpawley/Rsagacmd")
