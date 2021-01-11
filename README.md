@@ -1,9 +1,9 @@
 <!-- badges: start -->
-[![Build Status](https://travis-ci.org/stevenpawley/Rsagacmd.svg?branch=master)](https://travis-ci.org/stevenpawley/Rsagacmd)
 [![CRAN status](https://www.r-pkg.org/badges/version/Rsagacmd)](https://cran.r-project.org/package=Rsagacmd)
 [![Downloads](https://cranlogs.r-pkg.org/badges/grand-total/Rsagacmd)
 [![Codecov test coverage](https://codecov.io/gh/stevenpawley/Rsagacmd/branch/master/graph/badge.svg)](https://codecov.io/gh/stevenpawley/Rsagacmd?branch=master)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![R-CMD-check](https://github.com/stevenpawley/Rsagacmd/workflows/R-CMD-check/badge.svg)](https://github.com/stevenpawley/Rsagacmd/actions)
 <!-- badges: end -->
 
 
@@ -11,7 +11,7 @@
 
 Rsagacmd provides an R scripting interface to the open-source SAGA-GIS
 (https://sourceforge.net/projects/saga-gis/) software. The current version has
-been tested using SAGA-GIS 2.3.2, 5.0.0 - 7.6.0 on Windows (x64), OS X and
+been tested using SAGA-GIS 2.3.2, 5.0.0 - 7.9.0 on Windows (x64), OS X and
 Linux.
 
 ## Contents
@@ -34,7 +34,7 @@ operations.
 
 Rsagacmd is unrelated to the `RSAGA` package
 (https://cran.r-project.org/web/packages/RSAGA/index.html), which provides a
-command line parser and a limited set of pre-defined functions to interface with
+command line parser and a subset of pre-defined functions to interface with
 SAGA-GIS. In contrast, Rsagacmd provides links with SAGA-GIS by dynamically
 generating R functions for every SAGA-GIS tool that is contained in the user\'s
 installed SAGA-GIS version. This means that every SAGA-GIS tool is available for

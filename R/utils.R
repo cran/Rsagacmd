@@ -11,58 +11,15 @@
 #' provides a convenient way to perform that calculation.
 #'
 #' @param res numeric, DEM resolution
-#' @param plot logical, produce plot of relationship
 #'
 #' @return numeric, t_slope value for MRVBF
 #' @export
 #'
 #' @examples
-#' mrvbf_threshold(res = 10, plot = TRUE)
-mrvbf_threshold <- function(res, plot = FALSE) {
-  # slope decreases by factor of 2 per every 'step' above a 25 m dem resolution
-  # a step consists of a 3 factor increase in the dem cell size
-  # Gallant and Dowling 2003
-  
-  dem_res <- c(6075, 2025, 675, 225, 75, 25, 8, 3, 1)
-  mrvbf_slope <- c(0.5, 1, 2, 4, 8, 16, 32, 64, 128)
-  ds <- data.frame(dem_res, mrvbf_slope)
-  
-  m <- minpack.lm::nlsLM(
-    mrvbf_slope ~ a * I(dem_res^z), 
-    data = ds, 
-    start = list(
-      a = 100, 
-      z = 1)
-    )
-
-  if (plot == TRUE) {
-    # produce nls smooth line
-    predx <- seq(min(res, dem_res / 2), max(res * 2, dem_res), 0.1)
-    predy <- stats::predict(m, list(dem_res = predx))
-
-    # plot
-    graphics::plot(dem_res, mrvbf_slope,
-      xlab = "DEM resolution (m)",
-      ylab = "MRVBF Initial Slope", 
-      xlim = c(min(predx), max(min(dem_res), res) * 1.5), 
-      xaxs = "i"
-    )
-    
-    graphics::lines(predx, predy)
-    graphics::lines(
-      x = c(res, res), 
-      y = c(0, stats::predict(m, list(dem_res = res))))
-    graphics::lines(
-      x = c(0, res), 
-      y = c(
-        stats::predict(m, list(dem_res = res)), 
-        stats::predict(m, list(dem_res = res))
-        )
-      )
-  }
-
-  val <- stats::predict(m, list(dem_res = res))
-  as.numeric(val)
+#' mrvbf_threshold(res = 10)
+mrvbf_threshold <- function(res) {
+  t_slope = 116.57 * (res ** -0.62)
+  return(t_slope)
 }
 
 
@@ -121,7 +78,7 @@ search_tools <- function(x, pattern) {
 #' @param nx An integer with the number of x-pixels per tile.
 #' @param ny An integer with the number of y-pixels per tile.
 #' @param overlap An integer with the number of overlapping pixels.
-#' @param file_path An optional file file path to store raster tiles.
+#' @param file_path An optional file file path to store the raster tiles.
 #'
 #' @return A list of RasterLayer objects representing tiled data.
 #' @export
@@ -138,33 +95,41 @@ search_tools <- function(x, pattern) {
 #' }
 tile_geoprocessor <- function(x, grid, nx, ny, overlap = 0, file_path = NULL) {
 
-  # get environment of saga_gis object
-  env <- environment(x[[1]][[1]])
-
-  # calculate number of tiles required
-  n_widths <- ceiling(1 / (nx / (ncol(grid) + overlap)))
-  n_heights <- ceiling(1 / (ny / (nrow(grid) + overlap)))
-  n_tiles <- n_widths * n_heights
-
-  # create list of temporary files for tiles
-  tile_outputs <- c()
-
-  for (i in seq_len(n_tiles)) {
-    if (is.null(file_path)) {
-      temp <- tempfile(fileext = ".sgrd")
-    } else {
-      temp <- tempfile(tmpdir = file_path, fileext = ".sgrd")
-    }
-    tile_outputs <- c(tile_outputs, temp)
-    pkg.env$sagaTmpFiles <- append(pkg.env$sagaTmpFiles, temp)
+  if (is.null(file_path)) {
+    include_as_tempfiles <- TRUE
+    file_path <-
+      file.path(tempdir(), paste0("tiles", floor(stats::runif(1, 0, 1e6))))
+    
+    if (!dir.exists(file_path))
+      dir.create(file_path)
+    
+  } else {
+    include_as_tempfiles <- FALSE
   }
-
-  # grid tiling
+  
   x$grid_tools$tiling(
     grid = grid,
-    tiles = tile_outputs,
-    overlap = 0,
+    overlap = overlap,
     nx = nx,
-    ny = ny
+    ny = ny, 
+    tiles_path = file_path,
+    tiles_save = TRUE,
+    .all_outputs = FALSE, 
+    .intern = FALSE
   )
+  
+  tile_sdats <- list.files(file_path, pattern = "*.sdat$", full.names = TRUE)
+  
+  if (include_as_tempfiles)
+    pkg.env$sagaTmpFiles <- append(pkg.env$sagaTmpFiles, tile_sdats)
+  
+  senv <- environment(x[[1]][[1]])$senv
+  
+  if (senv$backend == "raster")
+    tiles <- sapply(tile_sdats, raster::raster)
+  
+  if (senv$backend == "terra")
+    tiles <- sapply(tile_sdats, terra::rast)
+  
+  tiles
 }
