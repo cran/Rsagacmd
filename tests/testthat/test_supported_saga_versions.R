@@ -1,6 +1,3 @@
-library(Rsagacmd)
-library(raster)
-
 download_saga <- function(surl) {
   # Downloads a saga windows x64 binary from sourceforge
   saga_zipdir <- file.path(tempdir(), tools::file_path_sans_ext(basename(surl)))
@@ -38,7 +35,8 @@ testthat::test_that("initiation of SAGA-GIS 2.3.1", {
   testthat::skip_on_cran()
   testthat::skip_if_not(
     Sys.info()["sysname"] == "Windows" & 
-    Sys.info()["machine"] == "x86-64")
+    Sys.info()["machine"] == "x86-64"
+  )
   
   saga_url <-
     "https://sourceforge.net/projects/saga-gis/files/SAGA%20-%202/SAGA%202.3.1/saga_2.3.1_x64.zip"
@@ -70,7 +68,7 @@ testthat::test_that("initiation of SAGA-GIS 3.0.0", {
     saga <- saga_gis(saga_bin)
     testthat::expect_false(is.null(saga))
     testthat::expect_gt(length(saga), 0)
-    testthat::expect_is(
+    testthat::expect_s4_class(
       saga$grid_calculus$random_terrain(iterations = 1, radius = 1),
       "RasterLayer")
     unlink(dirname(saga_bin), recursive = TRUE)

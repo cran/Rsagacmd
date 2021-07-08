@@ -1,8 +1,8 @@
 Package: Rsagacmd
 Type: Package
 Title: Linking R with the Open-Source 'SAGA-GIS' Software
-Version: 0.1.0
-Date: 2021-01-08
+Version: 0.1.1
+Date: 2021-07-02
 Authors@R: c(
     person("Steven", "Pawley",
     email = "dr.stevenpawley@gmail.com",
@@ -12,14 +12,14 @@ Description: Provides an R scripting interface to the open-source 'SAGA-GIS' (Sy
 License: GPL-3
 Encoding: UTF-8
 SystemRequirements: SAGA-GIS (>= 2.3.1)
-LazyData: true
 RoxygenNote: 7.1.1
-Depends: raster, R (>= 2.10)
-Imports: XML, sf, tools, rgdal, foreign, magrittr, stringr, rlang,
-        tibble, processx
-Suggests: dplyr, testthat, covr, terra
+Depends: R (>= 2.10)
+Imports: XML, sf, raster, terra, stars, tools, utils, rgdal, foreign,
+        stringr, rlang, tibble, processx
+Suggests: dplyr, testthat (>= 3.0.0), covr
+Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2021-01-11 06:36:37 UTC; steven
+Packaged: 2021-07-07 21:54:54 UTC; steven
 Author: Steven Pawley [aut, cre]
 Repository: CRAN
-Date/Publication: 2021-01-11 08:30:02 UTC
+Date/Publication: 2021-07-08 04:10:02 UTC

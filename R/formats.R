@@ -1,5 +1,5 @@
 supported_raster_formats <- c(
-  `SAGA` = ".sdat",
+  `SAGA` = ".sgrd",
   `SAGA Compressed` = ".sg-grd-z",
   `GeoTIFF` = ".tif"
 )
@@ -8,11 +8,12 @@ supported_raster_formats <- c(
 supported_vector_formats <- c(
  `ESRI Shapefile` = ".shp",
  `GeoPackage` = ".gpkg",
- `GeoJSON` = "geojson"
+ `GeoJSON` = ".geojson"
 )
 
 
-#' List the available raster formats that can be set as defaults for a `saga` object.
+#' List the available raster formats that can be set as defaults for a `saga`
+#' object.
 #'
 #' @return tibble
 #' @export
@@ -27,7 +28,8 @@ show_raster_formats <- function() {
 }
 
 
-#' List the available vector formats that can be set as defaults for a `saga` object.
+#' List the available vector formats that can be set as defaults for a `saga`
+#' object.
 #'
 #' @return tibble
 #' @export

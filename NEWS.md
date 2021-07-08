@@ -1,3 +1,28 @@
+# Rsagacmd 0.1.1
+
+New features:
+
+- Included support for the 'stars' raster backend.
+
+Changes:
+
+- Because 'Rsagacmd' now supports multiple raster backends, the 'raster' package
+is no longer automatically attached when using Rsagacmd. The raster/terra/stars
+objects resulting from geoprocessing operations be still be loaded, but to apply
+additional functions to these objects (e.g. plot) then the user needs to
+explicitly load the desired backend, e.g. `library(stars)` in their script.
+
+- The spinner is now turned off for geoprocessing operations because to avoid
+creating an annoying extra line in Rmarkdown notebooks, jupyter etc.
+
+- Rsagacmd now checks the file extensions of tools to ensure that the correct
+file extension is used relative to the `raster_format` or `vector_format`. 
+This ensures that outputs of SAGA-GIS tools will be correctly loaded by R.
+
+- Rsagacmd saga_search should correctly recognize the location of the saga_cmd binary
+on MacOS that is included within the QGIS.app bundle, if installed from official
+sources.
+
 # Rsagacmd 0.1.0
 
 Rsagacmd 0.1.0 includes many behind-the-scenes changes that organize the

@@ -12,8 +12,8 @@
 #'   generate dynamic functions that map to each tool. Used to save time if you
 #'   only want to import a single library.
 #' @param backend A character vector to specify the library to use for handling
-#'   raster data. Currently, either "raster" or "terra" is supported. The
-#'   default is "raster".
+#'   raster data. Currently, either "raster", "terra" or "stars" is supported.
+#'   The default is "raster".
 #'
 #' @return A saga environment S3 object containing paths, settings and a nested
 #'   list of libraries tools and options.
@@ -21,6 +21,9 @@ saga_env <-
   function(saga_bin = NULL,
            opt_lib = NULL,
            backend = "raster") {
+    
+    if (!backend %in% c("raster", "terra", "stars"))
+      rlang::abort("The `backend` must be one of 'raster', 'terra' or 'stars'")
     
     if (is.null(saga_bin)) 
       saga_bin <- saga_search()
@@ -289,14 +292,15 @@ saga_configure <-
 #'   default all cores are utilized. Needs to be set to 1 if file caching is
 #'   activated.
 #' @param backend A character vector to specify the library to use for handling
-#'   raster data. Currently, either "raster" or "terra" is supported. The
+#'   raster data. Currently, "raster", "terra" or "stars" is supported. The
 #'   default is "raster".
 #' @param raster_format A character to specify the default format used to save
 #'   raster data sets that are produced by SAGA-GIS. Available options are one
 #'   of "SAGA", "SAGA Compressed" or "GeoTIFF". The default is "SAGA".
 #' @param vector_format A character to specify the default format used to save
 #'   vector data sets that are produced by SAGA-GIS. Available options are of of
-#'   "ESRI Shapefile", "GeoPackage", or "GeoJSON". The default is "ESRI Shapefile".
+#'   "ESRI Shapefile", "GeoPackage", or "GeoJSON". The default is "ESRI
+#'   Shapefile".
 #' @param all_outputs A logical to indicate whether to automatically use
 #'   temporary files to store all output data sets from each SAGA-GIS tool.
 #'   Default = TRUE. This argument can be overridden by the `.all_outputs`
@@ -308,7 +312,7 @@ saga_configure <-
 #'   `RasterLayer` or `SpatRaster` object, depending on the `backend` setting
 #'   that is used. Vector data sets are always loaded as `sf` objects, and
 #'   tabular data sets are loaded as tibbles. The `intern` settings for the
-#'   `saga` object can be overriden for individual tools using the `.intern`
+#'   `saga` object can be overridden for individual tools using the `.intern`
 #'   argument.
 #' @param opt_lib A character vector with the names of a subset of SAGA-GIS
 #'   libraries. Used to link only a subset of named SAGA-GIS tool libraries,
@@ -391,10 +395,13 @@ saga_gis <-
       rlang::abort(paste("`vector_format` must be one of:", supported_vector_formats))
     senv$vector_format <- supported_vector_formats[vector_format]
     
-    # SAGA versions < 7.0 only allow direct writing to native formats
-    if (senv$saga_vers < 7.0 & raster_format != "SAGA")
-      rlang::abort("SAGA versions < 7.0 only allow directly writing of raster data via the 'SAGA' raster format")
+    # SAGA versions < 7.5 only allow direct writing to native formats
+    if (senv$saga_vers < 7.5 & !raster_format %in% c("SAGA", "SAGA Compressed"))
+      rlang::abort("SAGA versions < 7.5 only allow directly writing of raster data via the 'SAGA' or 'SAGA Compressed' raster formats")
       
+    if (senv$saga_vers < 5.0 & raster_format != "SAGA")
+      rlang::abort("SAGA versions < 5.0 only allow the 'SAGA' raster format")
+    
     if (senv$saga_vers < 7.0 & vector_format != "ESRI Shapefile")
       rlang::abort("SAGA versions < 7.0 only allow directly writing of vector data via the 'ESRI Shapefile' vector format")
     

@@ -23,19 +23,16 @@ read_shapes <- function(x) {
 #' @keywords internal
 read_table <- function(x) {
   if (tools::file_ext(x$files) == "txt") {
-    object <- 
-      utils::read.table(x$files, header = T, sep = "\t") %>%
-      tibble::as_tibble()
+    object <- utils::read.table(x$files, header = T, sep = "\t")
+    object <- tibble::as_tibble(object)
     
   } else if (tools::file_ext(x$files) == "csv") {
-    object <- 
-      utils::read.csv(x$files) %>% 
-      tibble::as_tibble()
+    object <- utils::read.csv(x$files)
+    object <- tibble::as_tibble(object)
     
   } else if (tools::file_ext(x$files) == "dbf") {
-    object <- 
-      foreign::read.dbf(x$files) %>%
-      tibble::as_tibble()
+    object <- foreign::read.dbf(x$files)
+    object <- tibble::as_tibble(object)
   }
   
   object
@@ -47,7 +44,7 @@ read_table <- function(x) {
 #' @param x list, a `options` object that was created by the `create_tool`
 #'   function that contains the parameters for a particular tool and its
 #'   outputs.
-#' @param backend character, either "raster" or "terra"
+#' @param backend character, either "raster", "terra" or "stars".
 #'
 #' @return either a `raster` or `SpatRaster` object
 #' 
@@ -55,8 +52,12 @@ read_table <- function(x) {
 read_grid <- function(x, backend) {
   if (backend == "raster")
     object <- raster::raster(x$files)
+  
   if (backend == "terra")
     object <- terra::rast(x$files)
+  
+  if (backend == "stars")
+    object <- stars::read_stars(x$files)
   
   object
 }
@@ -80,6 +81,9 @@ read_grid_list <- function(x, backend) {
   
   if (backend == "terra")
     object <- lapply(x$files, terra::rast)
+  
+  if (backend == "stars")
+    object <- lapply(x$files, stars::read_stars)
   
   names(object) <- paste(x$alias, seq_along(x$files), sep = "_")
   
@@ -115,16 +119,18 @@ read_output <- function(output, backend, .intern, .all_outputs) {
         "Table" = read_table(output),
         "Grid" = read_grid(output, backend),
         "Raster" = read_grid(output, backend),
-        "Grid list" = read_grid_list(output, backend)
+        "Grid list" = read_grid_list(output, backend),
+        "File path" = output$files
       )
       
     }, error = function(e) {
       
-      if (.all_outputs)
-        message(paste("No geoprocessing output for", 
-                      output$alias, 
-                      ". Results may require other input parameters to be specified"))
-
+      if (.all_outputs) {
+        message(
+          paste("No geoprocessing output for", output$alias,
+                ". Results may require other input parameters to be specified"))
+      }
+      
       return(NULL)
     })
     

@@ -28,7 +28,7 @@ saga_execute <-
            ...) {
     
     args <- c(...)
-
+    
     # get tool and saga settings
     tools_in_library <- senv$libraries[[lib]]
     selected_tool <- tools_in_library[[tool]]
@@ -65,7 +65,8 @@ saga_execute <-
     
     # optionally use tempfiles for unspecified outputs
     if (all_outputs == TRUE) {
-      params <- update_parameters_tempfiles(params, temp_path, raster_format, vector_format)
+      params <- update_parameters_tempfiles(params, temp_path, raster_format, 
+                                            vector_format)
     }
     
     # remove unused parameter objects
@@ -76,24 +77,36 @@ saga_execute <-
     }
     
     # check if any outputs will be produced
-    parameters_io <- params[sapply(params, function(x) !is.na(x$io))]
+    parameters_io <- lapply(params, function(x) if (!is.na(x$io)) x)
+    parameters_io <- parameters_io[!sapply(parameters_io, is.null)]
     
     if (length(parameters_io) > 0) {
-      tool_outputs <- parameters_io[sapply(parameters_io, function(x) x$io == "Output")]
-      tool_outputs <- tool_outputs[sapply(tool_outputs, function(x) !is.null(x$files))]
+      tool_outputs <- lapply(parameters_io, function(x) {
+        if (x$io == "Output" && !is.null(x$files))
+          return(x)
+      })
+      
+      tool_outputs <- tool_outputs[!sapply(tool_outputs, is.null)]
+      
       n_outputs <- length(tool_outputs)
     } else {
       n_outputs <- 0
     }
     
-    if (n_outputs == 0) {
+    # check that output formats are supported
+    if (n_outputs > 0) {
+      for (tool_output in tool_outputs)
+        check_output_format(tool_output, raster_format, vector_format)
+
+    } else {
       rlang::abort("No outputs have been specified")
       return(NULL)
     }
     
     # update the arguments and expected outputs for tool
     cmd_args <- sapply(params, function(param) param[["files"]])
-    cmd_args <- stats::setNames(cmd_args, sapply(params, function(param) param[["identifier"]]))
+    cmd_args <- stats::setNames(
+      cmd_args, sapply(params, function(param) param[["identifier"]]))
     
     # execute system call
     msg <- run_cmd(saga_cmd, saga_config, lib, tool_cmd, cmd_args, verbose)

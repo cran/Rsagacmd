@@ -18,24 +18,24 @@ create_tool <- function(tool_information, tool_options) {
   saga_tool_cmd <- colnames(tool_information)[2]
   
   # create syntactically-correct name for the tool
-  tool_name <- saga_tool_cmd %>%
-    stringr::str_replace_all("^[0-9]+", "") %>%
-    stringr::str_replace_all(" ", "_") %>%
-    stringr::str_replace_all("\\(", "") %>%
-    stringr::str_replace_all("\\)", "") %>%
-    stringr::str_replace_all("\\(", "") %>%
-    stringr::str_replace_all("\\)", "") %>%
-    stringr::str_replace_all("'", "") %>%
-    stringr::str_replace_all(",", "_") %>%
-    stringr::str_replace_all("/", "_") %>%
-    stringr::str_replace_all("-", "_") %>%
-    stringr::str_replace_all(":", "_") %>%
-    stringr::str_replace_all("\\[", "_") %>%
-    stringr::str_replace_all("\\]", "_") %>%
-    stringr::str_replace_all("&", "_") %>%
-    stringr::str_replace_all("_+", "_") %>%
-    stringr::str_replace_all("^_+", "") %>%
-    tolower()
+  tool_name <- gsub("^[0-9]+", "", saga_tool_cmd)
+  tool_name <- gsub("^[0-9]+", "", tool_name)
+  tool_name <- gsub(" ", "_", tool_name)
+  tool_name <- gsub("\\(", "", tool_name)
+  tool_name <- gsub("\\)", "", tool_name)
+  tool_name <- gsub("\\(", "", tool_name)
+  tool_name <- gsub("\\)", "", tool_name)
+  tool_name <- gsub("'", "", tool_name)
+  tool_name <- gsub(",", "_", tool_name)
+  tool_name <- gsub("/", "_", tool_name)
+  tool_name <- gsub("-", "_", tool_name)
+  tool_name <- gsub(":", "_", tool_name)
+  tool_name <- gsub("\\[", "_", tool_name)
+  tool_name <- gsub("\\]", "_", tool_name)
+  tool_name <- gsub("&", "_", tool_name)
+  tool_name <- gsub("_+", "_", tool_name)
+  tool_name <- gsub("^_+", "", tool_name)
+  tool_name <- tolower(tool_name)
   
   # strip input, output and options lines from table
   tool_options <-
@@ -46,21 +46,8 @@ create_tool <- function(tool_information, tool_options) {
   params <- parameters(tool_options)
   
   # apply exceptions for specific saga-gis tools
-  if (tool_name == "export_geotiff" | tool_name == "export_raster") {
-    params$file$io <- "Output"
-    params$file$feature <- "Grid"
-    
-  } else if (tool_name == "export_shapes" | tool_name == "export_shapes_to_kml") {
-    params$file$io <- "Output"
-    params$file$feature <- "Shapes"
-    
-  } else if (tool_name == "clip_grid_with_rectangle") {
-    params$output$feature <- "Grid"
+  params <- create_tool_overrides(tool_name, params)
   
-  } else if (tool_name == "tiling") {
-    params$tiles_path$io <- "Output"
-  }
-
   structure(list(
     tool_name = tool_name,
     tool_cmd = saga_tool_cmd,
