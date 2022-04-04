@@ -10,8 +10,7 @@
 #' @return The path to installed saga_cmd binary.
 #'
 #' @export
-saga_search <- function() {
-
+search_saga <- function() {
   # check to see if saga_cmd is recognized (i.e. has been added to path)
   saga_cmd <- if (nchar(Sys.which(names = "saga_cmd")) > 0) "saga_cmd" else NULL
 
@@ -27,11 +26,9 @@ saga_search <- function() {
         "C:/OSGeo4W64/"
       )
       saga_executable <- "saga_cmd.exe"
-
     } else if (Sys.info()["sysname"] == "Linux") {
       search_paths <- c("/usr/")
       saga_executable <- "saga_cmd$"
-
     } else if (Sys.info()["sysname"] == "Darwin") {
       search_paths <- c(
         "/usr/local/bin/",
@@ -60,7 +57,8 @@ saga_search <- function() {
       paste(
         "SAGA-GIS installation not found. Need to supply a valid path",
         "to the saga_cmd executable"
-    ))
+      )
+    )
 
     return(NULL)
 
@@ -75,8 +73,9 @@ saga_search <- function() {
 
     saga_vers <- list()
 
-    for (saga_inst in saga_cmd)
+    for (saga_inst in saga_cmd) {
       saga_vers <- append(saga_vers, saga_version(saga_inst))
+    }
 
     saga_cmd <- saga_cmd[which(saga_vers == max(saga_vers))]
   }

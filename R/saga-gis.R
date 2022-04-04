@@ -11,25 +11,35 @@
 #' @param opt_lib A character vector of a subset of SAGA-GIS tool libraries to
 #'   generate dynamic functions that map to each tool. Used to save time if you
 #'   only want to import a single library.
-#' @param backend A character vector to specify the library to use for handling
-#'   raster data. Currently, either "raster", "terra" or "stars" is supported.
-#'   The default is "raster".
+#' @param raster_backend A character vector to specify the library to use for
+#'   handling raster data. Currently, either "raster", "terra" or "stars" is
+#'   supported. The default is "raster".
+#' @param vector_backend A character to specify the library to use for handling
+#'   vector data. Currently, either "sf", "SpatVector" or "SpatVectorProxy" is
+#'   supported. The default is "sf".
 #'
 #' @return A saga environment S3 object containing paths, settings and a nested
 #'   list of libraries tools and options.
 saga_env <-
   function(saga_bin = NULL,
            opt_lib = NULL,
-           backend = "raster") {
+           raster_backend = "raster",
+           vector_backend = "sf") {
+    if (!raster_backend %in% c("raster", "terra", "stars")) {
+      rlang::abort("The `raster_backend` must be one of 'raster', 'terra' or 'stars'")
+    }
+    
+    if (!vector_backend %in% c("sf", "SpatVector", "SpatVectorProxy")) {
+      rlang::abort("The `vector_backend` must be one of 'sf', 'SpatVector' or 'SpatVectorProxy'")
+    }
+    
+    if (is.null(saga_bin)) {
+      saga_bin <- search_saga()
+    }
 
-    if (!backend %in% c("raster", "terra", "stars"))
-      rlang::abort("The `backend` must be one of 'raster', 'terra' or 'stars'")
-
-    if (is.null(saga_bin)) 
-      saga_bin <- saga_search()
-
-    if (nchar(Sys.which(names = saga_bin)) == 0)
+    if (nchar(Sys.which(names = saga_bin)) == 0) {
       rlang::abort("The supplied path to the saga_cmd binary is not correct")
+    }
 
     saga_vers <- saga_version(saga_bin)
 
@@ -41,7 +51,6 @@ saga_env <-
     if (saga_vers > as.numeric_version("3.0.0")) {
       cmd <- paste0(paste(shQuote(saga_bin), "--create-docs="), help_path)
       msg <- system(cmd, intern = TRUE)
-
     } else {
       olddir <- getwd()
       setwd(help_path)
@@ -49,16 +58,18 @@ saga_env <-
       setwd(olddir)
     }
 
-    if (!is.null(attr(msg, "status")))
+    if (!is.null(attr(msg, "status"))) {
       rlang::abort()
+    }
 
     # parse saga help files into nested list of libraries, tools and options
     docs_libraries <- list.dirs(path = help_path)
     docs_libraries <- docs_libraries[2:length(docs_libraries)]
 
-    if (!is.null(opt_lib))
+    if (!is.null(opt_lib)) {
       docs_libraries <-
-      docs_libraries[which(basename(docs_libraries) %in% opt_lib)]
+        docs_libraries[which(basename(docs_libraries) %in% opt_lib)]
+    }
 
     libraries <- list()
 
@@ -67,37 +78,68 @@ saga_env <-
 
       # get module names from file and remove from parameter list
       tool_names_file <- tool_files[which.min(nchar(tool_files))]
+      
+      # get library description
+      lib_html <- rvest::read_html(paste(libdir, tool_names_file, sep = "/"))
+      
+      lib_description_html <- rvest::html_elements(
+        lib_html,
+        xpath = "/html/body/text()"
+      )
+      lib_description <- paste(
+        rvest::html_text2(lib_description_html),
+        collapse = " "
+      )
+      lib_description <- stringr::str_to_sentence(lib_description)
+      
+      # remove library description html from the tool html files
       tool_files <- tool_files[tool_files != tool_names_file]
 
+      # create the library tools
       for (tool in tool_files) {
         tryCatch(
           expr = {
             html <- rvest::read_html(paste(libdir, tool, sep = "/"))
             options <- rvest::html_table(html, trim = TRUE)
 
-            description_html <- rvest::html_elements(
-              html, 
-              xpath = "/html/body/text()"
-            )
+            description_html <-
+              rvest::html_elements(
+                html,
+                xpath = "/html/body/text()"
+              )
 
-            description <- paste(rvest::html_text2(description_html),
-                                 collapse = " ")
+            description <- paste(
+              rvest::html_text2(description_html),
+              collapse = " "
+            )
 
             tool_information <- options[[1]]
             tool_options <- options[[length(options)]]
 
             if (!any(grepl("interactive", x = tool_information[[2]]))) {
-              tool_config <- create_tool(tool_information, tool_options,
-                                         description)
-
-              libraries[[basename(libdir)]][[tool_config$tool_name]] <-
-                tool_config
+              tool_config <- create_tool(
+                tool_information = tool_information,
+                tool_options = tool_options,
+                description = description,
+                html_file = tool
+              )
+              
+              libraries[[basename(libdir)]][[tool_config$tool_name]] <- tool_config
             }
+            
           },
-          error = function(e)
+          error = function(e) {
             e
+          }
         )
       }
+      
+      tryCatch({
+        attr(libraries[[basename(libdir)]], "description") <- lib_description  
+      }, error = function(e) {
+        e
+      })
+      
     }
 
     # remove tools that produce no outputs
@@ -106,12 +148,11 @@ saga_env <-
 
       for (tool in tools) {
         params <- libraries[[lib]][[tool]]$params
-
         has_output <- sapply(params, function(x) if ("io" %in% names(x)) x$io)
 
-        if (!"Output" %in% has_output)
-          libraries[[lib]] <-
-          libraries[[lib]][!names(libraries[[lib]]) == tool]
+        if (!"Output" %in% has_output) {
+          libraries[[lib]] <- libraries[[lib]][!names(libraries[[lib]]) == tool]
+        }
       }
     }
 
@@ -119,8 +160,9 @@ saga_env <-
     for (lib in names(libraries)) {
       n_tools <- length(libraries[[lib]])
 
-      if (n_tools == 0)
+      if (n_tools == 0) {
         libraries <- libraries[names(libraries) != lib]
+      }
     }
 
     # remove invalid libraries for saga_cmd
@@ -135,6 +177,8 @@ saga_env <-
       "garden_webservices",
       "grid_calculus_bsl",
       "pointcloud_viewer",
+      "pointcloud_tools",
+      "io_pdal",
       "tin_viewer"
     )
 
@@ -144,7 +188,8 @@ saga_env <-
       list(
         saga_cmd = saga_bin,
         saga_vers = saga_vers,
-        backend = backend,
+        raster_backend = raster_backend,
+        vector_backend = vector_backend,
         libraries = libraries
       )
     )
@@ -194,8 +239,7 @@ saga_configure <-
 
     # create configuration file if any arguments are supplied
     if ((grid_caching == TRUE | !is.null(cores)) &
-        saga_vers >= as.numeric_version("4.0.0")) {
-
+      saga_vers >= as.numeric_version("4.0.0")) {
       saga_config <- tempfile(fileext = ".ini")
 
       msg <- processx::run(
@@ -237,9 +281,11 @@ saga_configure <-
           cores <- 1
         }
 
-        saga_config_settings <- gsub("GRID_CACHE_MODE=[0-3]",
-                                     "GRID_CACHE_MODE=1",
-                                     saga_config_settings)
+        saga_config_settings <- gsub(
+          "GRID_CACHE_MODE=[0-3]",
+          "GRID_CACHE_MODE=1",
+          saga_config_settings
+        )
 
         saga_config_settings <- gsub(
           "GRID_CACHE_THRESHLOD=[0-9]*",
@@ -253,16 +299,17 @@ saga_configure <-
           saga_config_settings
         )
 
-        saga_config_settings <- gsub("OMP_THREADS_MAX=[0-9]*",
-                                     "OMP_THREADS_MAX=1",
-                                     saga_config_settings)
+        saga_config_settings <- gsub(
+          "OMP_THREADS_MAX=[0-9]*",
+          "OMP_THREADS_MAX=1",
+          saga_config_settings
+        )
       }
 
       # write configuration file
       writeChar(saga_config_settings, saga_config)
-
     } else if ((grid_caching == TRUE | !is.null(cores)) &
-               saga_vers < as.numeric_version("4.0.0")) {
+      saga_vers < as.numeric_version("4.0.0")) {
       message(
         paste(
           "Cannot enable grid caching or change number cores for SAGA-GIS",
@@ -300,14 +347,27 @@ saga_configure <-
 #'   activated.
 #' @param backend A character vector to specify the library to use for handling
 #'   raster data. Currently, "raster", "terra" or "stars" is supported. The
-#'   default is "raster".
+#'   default is "raster". Will be deprecated in the future in favour of
+#'   `raster_backend`.
+#' @param raster_backend A character vector to specify the library to use for
+#'   handling raster data. Currently, "raster", "terra" or "stars" is supported.
+#'   The default is "raster".
+#' @param vector_backend A character to specify the library to use for handling
+#'   vector data. Currently, "sf", "SpatVector" or "SpatVectorProxy" is
+#'   supported. The default is "sf", however for large vector datasets, using
+#'   the "SpatVectorProxy" backend from the `terra` package has performance
+#'   advantages because it allows file-based which can reduce repeated
+#'   reading/writing when passing data between R and SAGA-GIS.
 #' @param raster_format A character to specify the default format used to save
 #'   raster data sets that are produced by SAGA-GIS. Available options are one
 #'   of "SAGA", "SAGA Compressed" or "GeoTIFF". The default is "SAGA".
-#' @param vector_format A character to specify the default format used to save
-#'   vector data sets that are produced by SAGA-GIS. Available options are of of
-#'   "ESRI Shapefile", "GeoPackage", or "GeoJSON". The default is "ESRI
-#'   Shapefile".
+#' @param vector_format A character to specify the default format used for
+#'   vector data sets that are produced by SAGA-GIS, and also used to save
+#'   in-memory objects to be read by SAGA-GIS. Available options are of of "ESRI
+#'   Shapefile", "GeoPackage", or "GeoJSON". The default is "ESRI Shapefile" for
+#'   SAGA versions < 7.0 and GeoPackage for more recent versions. Attempting to
+#'   use anything other than "ESRI Shapefile" for SAGA-GIS versions < 7.0 will
+#'   raise an error.
 #' @param all_outputs A logical to indicate whether to automatically use
 #'   temporary files to store all output data sets from each SAGA-GIS tool.
 #'   Default = TRUE. This argument can be overridden by the `.all_outputs`
@@ -316,9 +376,9 @@ saga_configure <-
 #' @param intern A logical to indicate whether to load the SAGA-GIS
 #'   geoprocessing results as an R object, default = TRUE. For instance, if a
 #'   raster grid is output by SAGA-GIS then this will be loaded as either as
-#'   `RasterLayer` or `SpatRaster` object, depending on the `backend` setting
-#'   that is used. Vector data sets are always loaded as `sf` objects, and
-#'   tabular data sets are loaded as tibbles. The `intern` settings for the
+#'   `RasterLayer` or `SpatRaster` object, depending on the `raster_backend`
+#'   setting that is used. Vector data sets are always loaded as `sf` objects,
+#'   and tabular data sets are loaded as tibbles. The `intern` settings for the
 #'   `saga` object can be overridden for individual tools using the `.intern`
 #'   argument.
 #' @param opt_lib A character vector with the names of a subset of SAGA-GIS
@@ -342,7 +402,7 @@ saga_configure <-
 #' # Initialize a saga object
 #' library(Rsagacmd)
 #' library(raster)
-#' 
+#'
 #' saga <- saga_gis()
 #'
 #' # Alternatively initialize a saga object using file caching to handle large
@@ -373,15 +433,21 @@ saga_gis <-
            grid_cache_dir = NULL,
            cores = NULL,
            backend = "raster",
+           raster_backend = "raster",
+           vector_backend = "sf",
            raster_format = "SAGA",
-           vector_format = "ESRI Shapefile",
+           vector_format = c("ESRI Shapefile", "GeoPackage"),
            all_outputs = TRUE,
            intern = TRUE,
            opt_lib = NULL,
            temp_path = NULL,
            verbose = FALSE) {
-
-    senv <- saga_env(saga_bin, opt_lib, backend)
+    if (!missing(backend)) {
+      .Deprecated(new = "raster_backend", old = "backend")
+      raster_backend <- backend
+    }
+    
+    senv <- saga_env(saga_bin, opt_lib, raster_backend, vector_backend)
     senv$verbose <- verbose
     senv$all_outputs <- all_outputs
     senv$intern <- intern
@@ -396,41 +462,58 @@ saga_gis <-
         saga_vers = senv$saga_vers
       )
 
-    # check formats
-    if (!raster_format %in% names(supported_raster_formats))
+    # check raster formats
+    if (!raster_format %in% names(supported_raster_formats)) {
       rlang::abort(paste(
         "`raster_format` must be one of:",
         supported_raster_formats
       ))
-    senv$raster_format <- supported_raster_formats[raster_format]
-
-    if (!vector_format %in% names(supported_vector_formats))
-      rlang::abort(paste(
-        "`vector_format` must be one of:",
-        supported_vector_formats
-      ))
-    senv$vector_format <- supported_vector_formats[vector_format]
+    }
 
     # SAGA versions < 7.5 only allow direct writing to native formats
-    if (senv$saga_vers < 7.5 & !raster_format %in% c("SAGA", "SAGA Compressed"))
+    if (senv$saga_vers < 7.5 & !raster_format %in% c("SAGA", "SAGA Compressed")) {
       rlang::abort(paste(
         "SAGA versions < 7.5 only allow directly writing of",
         "raster data via the 'SAGA' or 'SAGA Compressed' raster formats"
       ))
+    }
 
-    if (senv$saga_vers < 5.0 & raster_format != "SAGA")
+    if (senv$saga_vers < 5.0 & raster_format != "SAGA") {
       rlang::abort("SAGA versions < 5.0 only allow the 'SAGA' raster format")
+    }
 
-    if (senv$saga_vers < 7.0 & vector_format != "ESRI Shapefile")
+    senv$raster_format <- supported_raster_formats[raster_format]
+
+    # check vector formats
+    if (!all(vector_format %in% names(supported_vector_formats))) {
+      rlang::abort(paste(
+        "`vector_format` must be one of:",
+        supported_vector_formats
+      ))
+    }
+
+    if (all(vector_format == c("ESRI Shapefile", "GeoPackage")) &
+      senv$saga_vers < 7.0) {
+      vector_format <- "ESRI Shapefile"
+    } else {
+      vector_format <- "GeoPackage"
+    }
+
+    if (senv$saga_vers < 7.0 & vector_format != "ESRI Shapefile") {
       rlang::abort(paste(
         "SAGA versions < 7.0 only allow directly writing of",
         "vector data via the 'ESRI Shapefile' vector format"
       ))
+    }
 
-    if (!is.null(temp_path))
+    senv$vector_format <- supported_vector_formats[vector_format]
+
+    # check path to temporary directory if assigned
+    if (!is.null(temp_path)) {
       senv[["temp_path"]] <- temp_path
-    else
+    } else {
       senv[["temp_path"]] <- tempdir()
+    }
 
     # dynamically create functions
     tool_libraries <- list()
@@ -447,22 +530,27 @@ saga_gis <-
             body <- create_function(lib = lib, tool = tool)
 
             # create list of arguments and default values
-            args <- lapply(params, function(x)
-              NULL)
+            args <- lapply(params, function(x) {
+              NULL
+            })
             args <-
-              c(args,
+              c(
+                args,
                 list(
                   .intern = NULL,
                   .all_outputs = NULL,
                   .verbose = NULL
-                ))
+                )
+              )
 
             # coerce arguments to comma-separated character
-            args <- mapply(function(k, v)
-              paste(k, deparse(v), sep = " = "),
-              names(args),
-              args,
-              USE.NAMES = FALSE)
+            args <- mapply(function(k, v) {
+              paste(k, deparse(v), sep = " = ")
+            },
+            names(args),
+            args,
+            USE.NAMES = FALSE
+            )
             args <- paste(args, collapse = ", ")
 
             # parse function
@@ -483,8 +571,9 @@ saga_gis <-
               append(tool_libraries[[lib]], func)
             toolnames <- append(toolnames, tool)
             names(tool_libraries[[lib]]) <- toolnames
+            class(tool_libraries[[lib]]) <- "saga_library"
           },
-          error = function(e)
+          error = function(e) {
             warning(
               paste0(
                 "Problem parsing SAGA-GIS library = ",
@@ -494,11 +583,13 @@ saga_gis <-
               ),
               call. = FALSE
             )
+          }
         )
       }
     }
 
     #  return S3 saga object
     structure(tool_libraries,
-              class = "saga")
+      class = "saga"
+    )
   }
