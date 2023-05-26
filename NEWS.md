@@ -1,3 +1,9 @@
+# Rsagacmd 0.3
+
+Changes:
+
+ - Removed dependencies for raster and rgdal apackages
+
 # Rsagacmd 0.2
 
 New features:
@@ -55,7 +61,7 @@ file extension is used relative to the `raster_format` or `vector_format`. This
 ensures that outputs of SAGA-GIS tools will be correctly loaded by R.
 
 - Rsagacmd saga_search should correctly recognize the location of the saga_cmd
-binary on MacOS that is included within the QGIS.app bundle, if installed from
+binary on macOS that is included within the QGIS.app bundle, if installed from
 official sources.
 
 # Rsagacmd 0.1.0
