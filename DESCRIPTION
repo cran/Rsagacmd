@@ -1,8 +1,8 @@
 Package: Rsagacmd
 Type: Package
 Title: Linking R with the Open-Source 'SAGA-GIS' Software
-Version: 0.4.1
-Date: 2023-05-25
+Version: 0.4.2
+Date: 2023-10-15
 Authors@R: c(
     person("Steven", "Pawley",
     email = "dr.stevenpawley@gmail.com",
@@ -29,20 +29,20 @@ Description: Provides an R scripting interface to the open-source 'SAGA-GIS'
     <https://sourceforge.net/projects/saga-gis/> including Windows x86/x64
     and macOS binaries. SAGA-GIS is also included in Debian/Ubuntu default software
     repositories. Rsagacmd has currently been tested on 'SAGA-GIS' versions
-    from 2.3.1 to 9.0.1 on Windows, Linux and macOS.
+    from 2.3.1 to 9.2 on Windows, Linux and macOS.
 License: GPL-3
 Encoding: UTF-8
 SystemRequirements: SAGA-GIS (>= 2.3.1)
 RoxygenNote: 7.2.3
 Depends: R (>= 2.10)
-Imports: generics, sf, terra (>= 1.5.21), stars, tools, utils, foreign,
+Imports: generics, sf, terra (>= 1.7.0), stars, tools, utils, foreign,
         stringr, rlang, tibble, processx, rvest
 Suggests: dplyr, testthat (>= 3.0.0), covr
 Config/testthat/edition: 3
 URL: https://stevenpawley.github.io/Rsagacmd/
 BugReports: https://github.com/stevenpawley/Rsagacmd/issues
 NeedsCompilation: no
-Packaged: 2023-06-21 02:54:28 UTC; stevenpawley
+Packaged: 2023-10-16 15:03:45 UTC; steven
 Author: Steven Pawley [aut, cre]
 Repository: CRAN
-Date/Publication: 2023-06-21 03:50:10 UTC
+Date/Publication: 2023-10-16 15:20:02 UTC

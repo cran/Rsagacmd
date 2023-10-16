@@ -95,7 +95,7 @@ parameter <-
 
     # parameter class attributes
     param <- list(
-      type = type,
+      type = tolower(type),
       name = name,
       alias = identifier,
       identifier = identifier,
@@ -186,35 +186,35 @@ parameter <-
       param$io <- "Output"
     }
 
-    if (stringr::str_detect(param$type, "Grid")) {
+    if (stringr::str_detect(param$type, "grid")) {
       param$feature <- "Grid"
     }
 
-    if (stringr::str_detect(param$type, "Grid list")) {
+    if (stringr::str_detect(param$type, "grid list")) {
       param$feature <- "Grid list"
     }
 
-    if (stringr::str_detect(param$type, "Shapes")) {
+    if (stringr::str_detect(param$type, "shapes")) {
       param$feature <- "Shape"
     }
 
-    if (stringr::str_detect(param$type, "Shapes list")) {
+    if (stringr::str_detect(param$type, "shapes list")) {
       param$feature <- "Shapes list"
     }
 
-    if (stringr::str_detect(param$type, "Table")) {
+    if (stringr::str_detect(param$type, "table")) {
       param$feature <- "Table"
     }
 
-    if (stringr::str_detect(param$type, "Static table")) {
+    if (stringr::str_detect(param$type, "static table")) {
       param$feature <- "Table"
     }
 
-    if (stringr::str_detect(param$type, "Table list")) {
+    if (stringr::str_detect(param$type, "table list")) {
       param$feature <- "Table list"
     }
 
-    if (stringr::str_detect(param$type, "File path")) {
+    if (stringr::str_detect(param$type, "file path")) {
       param$feature <- "File path"
     }
 
@@ -222,27 +222,27 @@ parameter <-
       param$feature <- "Table field"
     }
 
-    if (stringr::str_detect(param$type, "Integer")) {
+    if (stringr::str_detect(param$type, "integer")) {
       param$feature <- "Integer"
     }
 
-    if (stringr::str_detect(param$type, "Choice")) {
+    if (stringr::str_detect(param$type, "choice")) {
       param$feature <- "Choice"
     }
 
-    if (stringr::str_detect(param$type, "Floating point")) {
+    if (stringr::str_detect(param$type, "floating point")) {
       param$feature <- "numeric"
     }
 
-    if (stringr::str_detect(param$type, "Boolean")) {
+    if (stringr::str_detect(param$type, "boolean")) {
       param$feature <- "logical"
     }
 
-    if (stringr::str_detect(param$type, "Long text")) {
+    if (stringr::str_detect(param$type, "long text")) {
       param$feature <- "character"
     }
 
-    if (stringr::str_detect(param$type, "Text")) {
+    if (stringr::str_detect(param$type, "text")) {
       param$feature <- "character"
     }
 
@@ -290,7 +290,7 @@ update_parameter_file <-
 
 #' Updates a `parameters` object with file paths to the R data objects.
 #'
-#' @param param A `parameters` object.
+#' @param params A `parameters` object.
 #' @param temp_path A character specifying the tempdir to use for storage
 #'   (optional).
 #' @param raster_format file extension for raster formats
