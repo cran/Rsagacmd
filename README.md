@@ -18,7 +18,7 @@ stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://
 
 **Rsagacmd** provides an R scripting interface to the open-source
 SAGA-GIS (<https://sourceforge.net/projects/saga-gis/>) software. The
-current version has been tested using SAGA-GIS 2.3.2, 5.0.0 - 9.2 on
+current version has been tested using SAGA-GIS 2.3.2, 5.0.0 - 9.5.1 on
 Windows (x64), OS X and Linux.
 
 ## Contents
@@ -93,14 +93,9 @@ by:
 ``` r
 library(Rsagacmd)
 library(terra)
-#> terra 1.7.55
 
 # initiate a saga object
 saga <- saga_gis(raster_backend = "terra")
-#> Multiple installations of SAGA-GIS were found at:
-#> /Applications/SAGA.app/Contents/MacOS/saga_cmd
-#> /Applications/QGIS.app/Contents/MacOS/bin/saga_cmd
-#> Choosing newest version. Manually specify the location when calling saga_gis() to use an older version
 
 # load the example data
 srtm <- read_srtm()
@@ -112,8 +107,8 @@ saga$ta_morphometry$mass_balance_index(dem = srtm)
 #> resolution  : 100, 100  (x, y)
 #> extent      : 310009.9, 350009.9, 5879989, 5919989  (xmin, xmax, ymin, ymax)
 #> coord. ref. : NAD83(CSRS) / Alberta 10-TM (Forest) (EPSG:3402) 
-#> source      : file19ef60012a7.sdat 
-#> name        : file19ef60012a7
+#> source      : file1c143c3813f9.sdat 
+#> name        : file1c143c3813f9
 ```
 
 This facilitates an easier scripting experience by organizing the large
@@ -206,7 +201,7 @@ processing steps with pipes:
 
 ``` r
 library(sf)
-#> Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is TRUE
+#> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE
 
 # read project area as a simple features object
 prj_bnd <- st_polygon(list(matrix(
@@ -245,23 +240,23 @@ files can be cleaned during the session using:
 ``` r
 saga_remove_tmpfiles(h = 0)
 #> Removing Rsagacmd temporary files h=0
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef60012a7.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef61f3a27a.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef2ec55176.gpkg
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef1c6731f7.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef561275bc.sdat
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef55efb5c9.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef6c87cb32.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef472d7748.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef79f23c79.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19efe606a7b.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef5beeb89c.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef159a38eb.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef400ed761.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19efe5e4222.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef4e47cd8c.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef4c07ca7a.sgrd
-#> /var/folders/_m/kbp8r1612yj1xl6ndb2y8vpm0000gn/T//RtmpJHVnhB/file19ef137e3695.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c143c3813f9.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c143c94811.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c14364d567.gpkg
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c14169bee4.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c147e007eaf.sdat
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c145db12890.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c144dff3f7e.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c1429cd41e6.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c147a3a7e53.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c141dfe618a.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c147bf3577d.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c1476ba2ce0.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c1412873e39.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c1466168a4.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c147c5811af.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c1420856e7.sgrd
+#> C:\Users\steve\AppData\Local\Temp\RtmpGs07YS\file1c145cc33b19.sgrd
 ```
 
 where `h` is minimum age (in number of hours) of tempfiles for removal,
@@ -276,9 +271,9 @@ to be specified manually, e.g.:
 
 ``` r
 tri <- saga$ta_morphometry$terrain_ruggedness_index_tri(
-    dem = dem, 
-    radius = 3, 
-    tri = tempfile(fileext = ".sgrd"),
-    .all_outputs = FALSE
+  dem = dem, 
+  radius = 3, 
+  tri = tempfile(fileext = ".sgrd"),
+  .all_outputs = FALSE
 )
 ```
